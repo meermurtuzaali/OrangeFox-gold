@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up environment
       run: |
@@ -238,11 +238,8 @@ jobs:
         TW_DEVICE_VERSION := gold-HOS3-HOS4-GKI
         EOF
         
-        # Create empty placeholder files (you'll need to replace these)
-        touch device/xiaomi/gold/prebuilt/dtb
-        touch device/xiaomi/gold/ramdisk.init_boot.lz4
-        
         # Fix CTS error
+        mkdir -p cts/tests/tests/os/assets
         echo "15" >> cts/tests/tests/os/assets/platform_releases.txt
         echo "16" >> cts/tests/tests/os/assets/platform_releases.txt
 
@@ -256,7 +253,7 @@ jobs:
         mka recoveryimage -j4 2>&1 | tee build.log
 
     - name: Upload Recovery Image
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: OrangeFox-Recovery
@@ -266,7 +263,7 @@ jobs:
         retention-days: 9
 
     - name: Upload Build Log
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: build-log
