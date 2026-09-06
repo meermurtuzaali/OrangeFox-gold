@@ -19,8 +19,10 @@ jobs:
 
     - name: Add Swap Space to GitHub Runner
       run: |
-        # This creates an 8GB swap file on the GitHub server to prevent OOM crashes
-        sudo fallocate -l 8G /swapfile
+        # Delete any existing locked swap file
+        sudo rm -f /swapfile
+        # Use 'dd' to safely create an 8GB swap file
+        sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 status=progress
         sudo chmod 600 /swapfile
         sudo mkswap /swapfile
         sudo swapon /swapfile
@@ -67,7 +69,6 @@ jobs:
         lunch twrp_gold-ap2a-eng
         export ALLOW_MISSING_DEPENDENCIES=true
         export FOX_BUILD_TYPE=Stable
-        # Changed from -j4 to -j2 because GitHub runners only have 2 CPU cores
         mka recoveryimage -j2 2>&1 | tee build.log
 
     - name: Upload Recovery Image
