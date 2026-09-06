@@ -7,10 +7,6 @@ on:
         description: 'Device codename (e.g., gold)'
         required: true
         default: 'gold'
-      branch:
-        description: 'OrangeFox branch'
-        required: true
-        default: 'fox-14.1'
 
 jobs:
   build:
@@ -40,4 +36,42 @@ jobs:
         cd OrangeFox_sync
         git clone https://gitlab.com/OrangeFox/sync.git
         cd sync
-        ./orangefox_sync.sh --branch 14
+        # HARDCODED to 14.1 to prevent the "Invalid branch 14" error
+        ./orangefox_sync.sh --branch 14.1 --path ${{ github.workspace }}/fox_14.1
+      env:
+        GIT_LFS_SKIP_SMUDGE: 1
+
+    - name: Fix CTS Error
+      run: |
+        cd ${{ github.workspace }}/fox_14.1
+        mkdir -p cts/tests/tests/os/assets
+        echo "15" >> cts/tests/tests/os/assets/platform_releases.txt
+        echo "16" >> cts/tests/tests/os/assets/platform_releases.txt
+
+    - name: Build OrangeFox
+      run: |
+        cd ${{ github.workspace }}/fox_14.1
+        source build/envsetup.sh
+        lunch twrp_gold-ap2a-eng
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export FOX_BUILD_TYPE=Stable
+        mka recoveryimage -j4 2>&1 | tee build.log
+
+    - name: Upload Recovery Image
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: OrangeFox-Recovery
+        path: |
+          fox_14.1/out/target/product/gold/*.img
+          fox_14.1/out/target/product/gold/OrangeFox*.img
+          fox_14.1/out/target/product/gold/*.zip
+        retention-days: 9
+
+    - name: Upload Build Log
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: build-log
+        path: fox_14.1/build.log
+        retention-days: 9
