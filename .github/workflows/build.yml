@@ -17,6 +17,15 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Add Swap Space to GitHub Runner
+      run: |
+        # This creates an 8GB swap file on the GitHub server to prevent OOM crashes
+        sudo fallocate -l 8G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        free -h
+
     - name: Set up environment
       run: |
         sudo apt-get update
@@ -42,7 +51,6 @@ jobs:
 
     - name: Copy Device Tree to Source
       run: |
-        # This copies your device tree from the repo into the actual build folder!
         cp -r ${{ github.workspace }}/device/xiaomi/gold ${{ github.workspace }}/fox_14.1/device/xiaomi/
 
     - name: Fix CTS Error
@@ -59,7 +67,8 @@ jobs:
         lunch twrp_gold-ap2a-eng
         export ALLOW_MISSING_DEPENDENCIES=true
         export FOX_BUILD_TYPE=Stable
-        mka recoveryimage -j4 2>&1 | tee build.log
+        # Changed from -j4 to -j2 because GitHub runners only have 2 CPU cores
+        mka recoveryimage -j2 2>&1 | tee build.log
 
     - name: Upload Recovery Image
       uses: actions/upload-artifact@v4
