@@ -17,15 +17,13 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Add Swap Space to GitHub Runner
+    - name: Add Extra Swap Space
       run: |
-        # Delete any existing locked swap file
-        sudo rm -f /swapfile
-        # Use 'dd' to safely create an 8GB swap file
-        sudo dd if=/dev/zero of=/swapfile bs=1M count=8192 status=progress
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
+        # We create a new swap file in the home folder to avoid permission errors
+        sudo dd if=/dev/zero of=~/swapfile2 bs=1M count=8192 status=progress
+        sudo chmod 600 ~/swapfile2
+        sudo mkswap ~/swapfile2
+        sudo swapon ~/swapfile2
         free -h
 
     - name: Set up environment
