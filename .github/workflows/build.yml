@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       device:
-        description: 'Device codename (e.g., gold)'
+        description: 'Device codename'
         required: true
         default: 'gold'
 
@@ -14,7 +14,7 @@ jobs:
     name: Build OrangeFox
 
     steps:
-    - name: Checkout
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
     - name: Set up environment
@@ -36,10 +36,14 @@ jobs:
         cd OrangeFox_sync
         git clone https://gitlab.com/OrangeFox/sync.git
         cd sync
-        # HARDCODED to 14.1 to prevent the "Invalid branch 14" error
         ./orangefox_sync.sh --branch 14.1 --path ${{ github.workspace }}/fox_14.1
       env:
         GIT_LFS_SKIP_SMUDGE: 1
+
+    - name: Copy Device Tree to Source
+      run: |
+        # This copies your device tree from the repo into the actual build folder!
+        cp -r ${{ github.workspace }}/device/xiaomi/gold ${{ github.workspace }}/fox_14.1/device/xiaomi/
 
     - name: Fix CTS Error
       run: |
